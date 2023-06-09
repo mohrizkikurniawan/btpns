@@ -217,13 +217,19 @@ BuildJsonCheckStatus:
 	vAddDataPrivate := FMT(rvTableIncoming<BtpnsThBifastIncoming_CusReference>, "L#16")
 	vAddDataPrivate := FMT(rvTableIncoming<BtpnsThBifastIncoming_CusDbName>, "L#30")
 	
-	vAddDataNational = FMT(rvTableIncoming<BtpnsThBifastIncoming_TagTm>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagTm>[3,2]+4))
-	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagTc>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagTc>[3,2]+4))
-	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagPi>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagPi>[3,2]+4))
-	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagDi>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagDi>[3,2]+4))
-	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagCi>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagCi>[3,2]+4))
-	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagRn>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagRn>[3,2]+4))
-	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagIf>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagIf>[3,2]+4))
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagTm> NE '' THEN vAddDataNational = FMT(rvTableIncoming<BtpnsThBifastIncoming_TagTm>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagTm>[3,2]+4))
+
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagTc> NE '' THEN 	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagTc>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagTc>[3,2]+4))
+
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagPi> NE '' THEN 	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagPi>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagPi>[3,2]+4))
+
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagDi> NE '' THEN 	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagDi>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagDi>[3,2]+4))
+
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagCi> NE '' THEN 	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagCi>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagCi>[3,2]+4))
+
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagRn> NE '' THEN 	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagRn>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagRn>[3,2]+4))
+
+	IF rvTableIncoming<BtpnsThBifastIncoming_TagIf> NE '' THEN 	vAddDataNational := FMT(rvTableIncoming<BtpnsThBifastIncoming_TagIf>, "L#":(rvTableIncoming<BtpnsThBifastIncoming_TagIf>[3,2]+4))
 	
 	
 	vType = "BCheckStatusRQ"

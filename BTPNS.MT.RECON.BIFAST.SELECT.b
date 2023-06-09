@@ -1,0 +1,211 @@
+    SUBROUTINE BTPNS.MT.RECON.BIFAST.SELECT
+*-----------------------------------------------------------------------------
+* Developer Name     : Saidah Manshuroh
+* Development Date   : 20220929
+* Description        : Routine for generate teksfile recon BiFast
+*-----------------------------------------------------------------------------
+* Modification History:-
+*-----------------------------------------------------------------------------
+* Date			Modified by					Description
+*-----------------------------------------------------------------------------
+* Date           	: 20221128
+* Modified by    	: Saidah Manshuroh
+* Description		: Add logic to move file using sftp
+*-----------------------------------------------------------------------------
+*
+*-----------------------------------------------------------------------------
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    $INSERT I_BATCH.FILES
+	$INSERT I_TSA.COMMON
+	$INSERT I_F.BTPNS.TH.BIFAST.INCOMING
+	$INSERT I_F.BTPNS.TH.BIFAST.OUTGOING
+	$INSERT I_F.FUNDS.TRANSFER
+	$INSERT I_F.IDCH.RTGS.BANK.CODE.G2
+	$INSERT I_BTPNS.MT.RECON.BIFAST.COMMON
+	$INSERT I_F.ATI.TH.SFTP.PARAM
+	$INSERT I_F.LOCKING
+	$INCLUDE JBC.h
+
+*-----------------------------------------------------------------------------
+MAIN:
+*-----------------------------------------------------------------------------
+
+	Y.ID.LOCKING	= "BIFAST.RECON.SCHD"
+	CALL F.READ(FN.LOCKING, Y.ID.LOCKING, R.LOCKING, F.LOCKING, Y.ERR.LOCKING)
+	Y.LAST.TRX.DATE	= R.LOCKING<1>
+	
+	CALL CDT("", Y.SELDATE, "-1C")
+	
+	BEGIN CASE
+		CASE Y.BATCH.NAME EQ "BNK/BTPNS.MT.RECON.BIFAST.SCHD" AND Y.LAST.TRX.DATE EQ Y.SELDATE
+			RETURN
+			
+		CASE Y.BATCH.NAME EQ "BNK/BTPNS.MT.RECON.BIFAST.SCHD" AND Y.LAST.TRX.DATE NE Y.SELDATE
+			IF CONTROL.LIST EQ "" THEN
+				CONTROL.LIST	= "BODY.OUT" :FM: "BODY.IN" :FM: "ATTRIBUTE" :FM: "SFTP.RECON" :FM: "WRITE.TAG"
+			END
+			
+			Y.SFTP.ID	= BATCH.DETAILS<3,1>
+			
+		CASE 1
+			IF CONTROL.LIST EQ "" THEN
+				CONTROL.LIST	= "BODY.OUT" :FM: "BODY.IN" :FM: "ATTRIBUTE" :FM: "SFTP.RECON"
+			END
+			
+			Y.SFTP.ID	= "BIFAST.RECON"
+	END CASE
+	
+	Y.CONTROL			= CONTROL.LIST<1,1>
+		
+    cipher 				= JBASE_CRYPT_BLOWFISH_BASE64
+    key 				= "PT. Anabatic Technologies"
+	Y.HEADER			= ""
+	Y.FOOTER			= ""
+	R.FILE.TEMP			= ""
+	R.FILE.FINAL		= ""
+	Y.FINAL.AMOUNT		= 0
+	Y.FINAL.DATA		= 0
+	Y.FINAL.SUCCESS		= 0
+	
+	GOSUB PROCESS
+	
+    RETURN
+
+*-----------------------------------------------------------------------------
+PROCESS:
+*-----------------------------------------------------------------------------
+
+	BEGIN CASE
+	CASE Y.CONTROL EQ "BODY.IN"
+		SEL.CMD		 = "SELECT " : FN.BTPNS.TH.BIFAST.INCOMING : " WITH DATE.TIME GE " : SEL.DATE.GE : " AND DATE.TIME LE " : SEL.DATE.LE
+		SEL.CMD		:= " AND SETTLEMENT.STATUS EQ 'PROCESSED' AND RESPONSE.CODE EQ '00' AND API.TYPE EQ 'B.TRF.RQ' AND RESERVED.1 EQ ''"
+		CALL EB.READLIST(SEL.CMD, SEL.LIST, "", SEL.CNT, Y.SEL.ERR)
+		
+		CALL BATCH.BUILD.LIST("", SEL.LIST)
+		
+	CASE Y.CONTROL EQ "BODY.OUT"
+		SEL.CMD		 = "SELECT " : FN.BTPNS.TH.BIFAST.OUTGOING : " WITH DATE.TIME GE " : SEL.DATE.GE : " AND DATE.TIME LE " : SEL.DATE.LE
+		SEL.CMD		:= " AND SETTLEMENT.STATUS EQ 'PROCESSED'"
+		CALL EB.READLIST(SEL.CMD, SEL.LIST, "", SEL.CNT, Y.SEL.ERR)
+		
+		CALL BATCH.BUILD.LIST("", SEL.LIST)
+	
+	CASE Y.CONTROL EQ "ATTRIBUTE"
+		SEL.CMD	= "SELECT " : FN.FOLDER
+		CALL EB.READLIST(SEL.CMD, SEL.LIST, "", SEL.CNT, SEL.ERR)
+	
+		FOR Y.I = 1 TO SEL.CNT
+			Y.FILE.AGENT	= SEL.LIST<Y.I>
+			CALL F.READ(FN.FOLDER, Y.FILE.AGENT, R.FOLDER, F.FOLDER, Y.ERR.FOLDER)
+			
+			BEGIN CASE
+				CASE Y.FILE.AGENT[1,4] EQ "PART"
+					R.FILE.TEMP<-1>	 = R.FOLDER
+					
+					DELETE F.FOLDER, Y.FILE.AGENT
+					
+				CASE Y.FILE.AGENT[1,3] EQ "SUM"
+					Y.FINAL.DATA	+= FIELD(R.FOLDER<1>, "|", 1)
+					Y.FINAL.SUCCESS	+= FIELD(R.FOLDER<1>, "|", 2)
+					Y.FINAL.AMOUNT	+= FIELD(R.FOLDER<1>, "|", 3)
+					
+					DELETE F.FOLDER, Y.FILE.AGENT
+			END CASE
+		NEXT Y.I
+				
+		CALL F.READ(FN.FOLDER, Y.FILE.REK, R.FILE.REK, F.FOLDER, Y.ERR.FOLDER)
+	
+		Y.HEADER	 = "REK000" 			: "|"
+		Y.HEADER	:= Y.DATE.RECON			: "|"
+		Y.HEADER	:= Y.DATE.CREATED		: "|"
+		Y.HEADER	:= "0" : Y.BANK.CODE	: "|"
+		Y.HEADER	:= Y.FINAL.DATA			: "|"
+		Y.HEADER	:= Y.FINAL.SUCCESS		: "|"
+		Y.HEADER	:= Y.FINAL.AMOUNT	
+		
+		Y.FOOTER	 = "REK090" 			: "|"
+		Y.FOOTER	:= Y.DATE.RECON			: "|"
+		Y.FOOTER	:= Y.DATE.CREATED		: "|"
+		Y.FOOTER	:= "0" : Y.BANK.CODE	: "|"
+		Y.FOOTER	:= Y.FINAL.DATA			: "|"
+		Y.FOOTER	:= Y.FINAL.SUCCESS		: "|"
+		Y.FOOTER	:= Y.FINAL.AMOUNT	
+		
+		R.FILE.FINAL<1>			= Y.HEADER
+		
+		IF R.FILE.TEMP THEN
+			R.FILE.FINAL<-1>	= R.FILE.TEMP
+		END
+		
+		R.FILE.FINAL<-1>		= Y.FOOTER
+		WRITE R.FILE.FINAL TO F.FOLDER,Y.FILE.REK
+		
+	CASE Y.CONTROL EQ "SFTP.RECON"
+		CALL F.READ(FN.ATI.TH.SFTP.PARAM, Y.SFTP.ID, R.ATI.TH.SFTP.PARAM, F.ATI.TH.SFTP.PARAM, Y.ERR.SFTP.PAR)
+		Y.SFTP.MODE             = R.ATI.TH.SFTP.PARAM<SFTP.PAR.MODE>
+		Y.SFTP.HOST             = R.ATI.TH.SFTP.PARAM<SFTP.PAR.HOST>
+		Y.SFTP.PORT             = R.ATI.TH.SFTP.PARAM<SFTP.PAR.PORT>
+		Y.SFTP.SESSION.TIMEOUT  = R.ATI.TH.SFTP.PARAM<SFTP.PAR.SESSION.TIMEOUT>
+		Y.SFTP.CHANNEL.TIMEOUT  = R.ATI.TH.SFTP.PARAM<SFTP.PAR.CHANNEL.TIMEOUT>
+		Y.SFTP.USER             = R.ATI.TH.SFTP.PARAM<SFTP.PAR.USER>
+		Y.SFTP.UPLOAD.TO.DIR    = R.ATI.TH.SFTP.PARAM<SFTP.PAR.UPLOAD.TO.DIR>
+		Y.SFTP.PASSWORD         = R.ATI.TH.SFTP.PARAM<SFTP.PAR.PASSWORD>
+		Y.SFTP.PASSWORD         = DECRYPT(Y.SFTP.PASSWORD, key, cipher)
+		
+		GETENV("T24_HOME", Y.T24HOME)
+		
+		Y.SFTP.UPLOAD.FROM.DIR  = Y.T24HOME:"/":R.ATI.TH.SFTP.PARAM<SFTP.PAR.UPLOAD.FROM.DIR>
+		Y.SFTP.LOG.PATH.DIR     = Y.T24HOME:"/":R.ATI.TH.SFTP.PARAM<SFTP.PAR.LOG.PATH.DIR>
+	
+		X				= OCONV(DATE(),"D-")
+		Y.SYSTODAY		= X[7,4]:X[1,2]:X[4,2]:Y.TIME.HMS
+		Y.COUNT.SLASH	= COUNT(Y.SFTP.LOG.PATH.DIR, "/")
+		Y.LOG.FOLDER	= FIELD(Y.SFTP.LOG.PATH.DIR, "/", 1, Y.COUNT.SLASH)
+		Y.FILENAME		= FIELD(Y.SFTP.LOG.PATH.DIR, "/", Y.COUNT.SLASH + 1)
+		Y.MASK.DATE		= "#DATE#"
+		
+		FINDSTR Y.MASK.DATE IN Y.FILENAME SETTING Y.DATE.POS THEN
+			Y.FILENAME = EREPLACE(Y.FILENAME, Y.MASK.DATE, Y.SYSTODAY)
+		END
+		
+		Y.SFTP.PARAM             = Y.SFTP.HOST				:"&"
+		Y.SFTP.PARAM            := Y.SFTP.PORT				:"&"
+		Y.SFTP.PARAM            := Y.SFTP.SESSION.TIMEOUT	:"&"
+		Y.SFTP.PARAM            := Y.SFTP.CHANNEL.TIMEOUT	:"&"
+		Y.SFTP.PARAM            := Y.SFTP.USER				:"&"
+		Y.SFTP.PARAM            := Y.SFTP.PASSWORD			:"&"
+		Y.SFTP.PARAM            := Y.SFTP.MODE				:"&"
+		Y.SFTP.PARAM            := Y.SFTP.UPLOAD.FROM.DIR	:"&"
+		Y.SFTP.PARAM            := Y.SFTP.UPLOAD.TO.DIR		:"&"
+		Y.SFTP.PARAM            := Y.SFTP.LOG.PATH.DIR		:"&"
+		Y.SFTP.PARAM            := Y.FILE.REK
+		
+		CALL ATI.PROCESS.SFTP(Y.SFTP.PARAM, Y.SFTP.OUTPUT)	
+		
+		OPENSEQ Y.LOG.FOLDER, Y.FILENAME TO F.IN ELSE CREATE F.IN ELSE
+			SQL.CMD = "CREATE.FILE ":Y.LOG.FOLDER:" TYPE=UD"
+			EXECUTE SQL.CMD
+			OPENSEQ Y.LOG.FOLDER, Y.FILENAME TO F.IN ELSE CREATE F.IN ELSE
+			END
+		END
+	
+		WRITESEQ Y.SFTP.OUTPUT APPEND TO F.IN ELSE
+			RETURN
+		END
+		CLOSESEQ F.IN
+    	
+		FN.FOLDER.BKP		= "../UD/APPSHARED.BP/BIFAST.RECON/backup"
+		OPEN FN.FOLDER.BKP TO F.FOLDER.BKP THEN
+			DELETE F.FOLDER.BKP, Y.FILE.REK
+		END
+	
+	CASE Y.CONTROL EQ "WRITE.TAG"
+		R.LOCKING<1>	= Y.SELDATE
+													   
+		WRITE R.LOCKING TO F.LOCKING, Y.ID.LOCKING
+	END CASE
+	
+    RETURN
+*-----------------------------------------------------------------------------
+END

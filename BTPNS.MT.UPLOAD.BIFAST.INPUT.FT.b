@@ -1,0 +1,186 @@
+    SUBROUTINE BTPNS.MT.UPLOAD.BIFAST.INPUT.FT(Y.REQ.FT)
+*-----------------------------------------------------------------------------
+* Developer Name     : Moh Rizki Kurniawan
+* Development Date   : 08 Agustus 2022
+* Description        : Routine to process FT $NAU Upload BIFAST 
+*-----------------------------------------------------------------------------
+* Modification History:-
+*-----------------------------------------------------------------------------
+* Date            Modified by                Description
+*-----------------------------------------------------------------------------
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    $INSERT I_GTS.COMMON
+	$INSERT I_F.EB.FILE.UPLOAD
+	$INSERT I_F.EB.FILE.UPLOAD.TYPE
+	$INSERT I_F.EB.FILE.UPLOAD.PARAM
+	$INSERT I_F.FUNDS.TRANSFER
+	$INSERT I_F.DM.MAPPING.DEFINITION
+	$INSERT I_TSA.COMMON
+	$INSERT I_AA.LOCAL.COMMON
+	$INSERT I_F.BTPNS.TL.BIFAST.UPLOAD.NAU
+*-----------------------------------------------------------------------------
+MAIN:
+*-----------------------------------------------------------------------------
+
+	COMMON/UPLOAD.BIFAST.INPUT.FT.COM/FN.BTPNS.TL.BIFAST.UPLOAD.TMP,F.BTPNS.TL.BIFAST.UPLOAD.TMP,FN.EB.FILE.UPLOAD.TYPE,F.EB.FILE.UPLOAD.TYPE,FN.EB.FILE.UPLOAD.PARAM,F.EB.FILE.UPLOAD.PARAM,FN.EB.FILE.UPLOAD,F.EB.FILE.UPLOAD,FN.FUNDS.TRANSFER,F.FUNDS.TRANSFER,FN.DM.MAPPING.DEFINITION,F.DM.MAPPING.DEFINITION,Y.UPLOAD.TYPE,FN.BTPNS.TL.BIFAST.UPLOAD.NAU,F.BTPNS.TL.BIFAST.UPLOAD.NAU,FN.FOLDER.LOG,F.FOLDER.LOG,FN.DIR.FILE,F.DIR.FILE
+
+    GOSUB INIT
+    GOSUB PROCESS
+
+    RETURN
+
+*-----------------------------------------------------------------------------
+INIT:
+*-----------------------------------------------------------------------------
+	
+	
+    Y.APP 		= "EB.FILE.UPLOAD"
+    Y.FIELDS  	= "B.BIFAST.STATUS":@VM:"B.ERROR.MSG"
+    CALL MULTI.GET.LOC.REF(Y.APP,Y.FIELDS,Y.POS)
+
+	Y.B.BIFAST.STATUS.POS		= Y.POS<1,1>
+	Y.B.ERROR.MSG.POS			= Y.POS<1,2>
+	
+	Y.UPLOAD.TYPE = ''
+	Y.CO.CODE     = ''
+	Y.UPLOAD.TYPE = FIELD(FIELD(Y.REQ.FT, "*", 2), "|", 2)
+	Y.ID.UPLOAD	  = FIELD(FIELD(Y.REQ.FT, "*", 2), "|", 1)
+	Y.CO.CODE	  = FIELD(FIELD(Y.REQ.FT, "*", 2), "|", 3)
+
+	CALL F.READ(FN.DM.MAPPING.DEFINITION, Y.UPLOAD.TYPE, R.DMD, F.DM.MAPPING.DEFINITION, DM.MAPPING.DEFINITION.ERR)
+	Y.APPL.FIELD.NAME		= R.DMD<DM.MD.APPL.FIELD.NAME> 
+	Y.APPL.FIELD.NAME.CNT	= DCOUNT(Y.APPL.FIELD.NAME, @VM)
+	Y.FIELD.POSITION		= R.DMD<DM.MD.FIELD.POSITION>
+	Y.FM.DELIM				= R.DMD<DM.MD.FM.DELIM>
+	Y.VM.DELIM				= R.DMD<DM.MD.VM.DELIM>
+	Y.SM.DELIM				= R.DMD<DM.MD.SM.DELIM>
+	Y.APPLICATION.NAME		= R.DMD<DM.MD.APPLICATION.NAME>
+	Y.OFS.ACTION			= R.DMD<DM.MD.OFS.ACTION>
+	
+	Y.OFS.SOURCE	= "BIFAST.MT"
+    Y.APP.NAME		= Y.APPLICATION.NAME
+    Y.OFS.FUNCT		= "I"
+    Y.PROCESS		= Y.OFS.ACTION
+    Y.OFS.VERSION	= Y.APP.NAME : ",BTPNS.BFAST.DATA.OUT.CR.MANUAL"
+    Y.GTS.MODE		= ""
+    Y.NO.OF.AUTH	= "1"
+    Y.TRANS.ID		= ""
+		
+	Y.OFS.MESSAGE.HDR		= Y.OFS.VERSION : "/" : Y.OFS.FUNCT : "/" : Y.PROCESS : "/" : Y.GTS.MODE : "/" : Y.NO.OF.AUTH : "/,//" : Y.CO.CODE : "///////////////,"
+	
+	FOR Y.I = 1 TO Y.APPL.FIELD.NAME.CNT
+		Y.NM.FIELD.DM	= Y.APPL.FIELD.NAME<1, Y.I>
+		Y.ID.POS.DM		= Y.FIELD.POSITION<1, Y.I> - 1
+		Y.VALUE.FM		= FIELD(Y.REQ.FT, Y.FM.DELIM, Y.ID.POS.DM)
+		FINDSTR Y.VM.DELIM IN Y.VALUE.FM SETTING Y.POSF THEN
+		
+			Y.VM.CNT	= DCOUNT(Y.VALUE.FM, Y.VM.DELIM)
+			FOR Y.VM = 1 TO Y.VM.CNT
+				Y.VALUE.VM	= FIELD(Y.VALUE.FM, Y.VM.DELIM, Y.VM)
+				FINDSTR Y.SM.DELIM IN Y.VALUE.VM SETTING Y.FPOS THEN
+					Y.SM.CNT	= DCOUNT(Y.VALUE.VM, Y.SM.DELIM)
+					FOR Y.SM = 1 TO Y.SM.CNT
+						Y.OFS.MESSAGE.REC := "," : Y.NM.FIELD.DM : ":" : Y.VM : ":" : Y.SM : "=" : FIELD(Y.VALUE.VM, Y.SM.DELIM, Y.SM)						
+					NEXT Y.SM
+				END ELSE
+					Y.OFS.MESSAGE.REC := "," : Y.NM.FIELD.DM : ":" : Y.VM : ":1=" : Y.VALUE.VM				
+				END
+
+			NEXT Y.VM
+		END ELSE
+			Y.OFS.MESSAGE.REC := "," : Y.NM.FIELD.DM : ":1:1=" : Y.VALUE.FM	
+		END
+
+	NEXT Y.I
+	
+*	Y.LINE.TEXTFILE = FIELD(Y.REQ.FT, Y.FM.DELIM, Y.I + 1)
+	Y.REQ.FT.INDEX	= FIELD(Y.REQ.FT, "*", 1)
+	Y.INDEX			= DCOUNT(Y.REQ.FT.INDEX, Y.FM.DELIM)
+	Y.LINE.TEXTFILE = FIELD(Y.REQ.FT.INDEX, Y.FM.DELIM, Y.INDEX)
+
+	Y.OFS.MESSAGE.REC := ",DEBIT.CURRENCY:1:1=IDR,CREDIT.CURRENCY:1:1=IDR,B.DBTR.ACCTYPE:1:1=10,B.DBTR.NM:1:1=BTPNS,B.CDTR.PRXYTYPE:1:1=0"
+
+    RETURN
+
+*-----------------------------------------------------------------------------
+PROCESS:
+*-----------------------------------------------------------------------------
+
+	Y.OFS.MESSAGE = Y.OFS.MESSAGE.HDR : Y.OFS.MESSAGE.REC
+
+	CALL OFS.CALL.BULK.MANAGER(Y.OFS.SOURCE, Y.OFS.MESSAGE, Y.OFS.RESPONSE, Y.RESULT)
+	CHANGE '<requests>'           TO ''  IN Y.OFS.RESPONSE
+    CHANGE '</request><request>'  TO @FM IN Y.OFS.RESPONSE
+    CHANGE '<request>'            TO ''  IN Y.OFS.RESPONSE
+    CHANGE '</request>'           TO ''  IN Y.OFS.RESPONSE
+    CHANGE '</requests>'          TO ''  IN Y.OFS.RESPONSE
+
+	Y.VALUE.RESPONSE 	= FIELD(Y.OFS.RESPONSE, "/", 3)[1,1] 
+	
+	Y.WRITE.TXT	  = "MESSAGE = " : Y.OFS.MESSAGE : "     "
+	Y.WRITE.TXT	 := "RESPONSE = " : Y.OFS.RESPONSE : "     "
+	
+	IF Y.VALUE.RESPONSE NE '1' THEN		
+		GOSUB READU.ERROR
+	    CALL ID.LIVE.WRITE(FN.EB.FILE.UPLOAD,Y.ID.UPLOAD,R.EB.FILE.UPLOAD)
+		CALL F.DELETE(FN.BTPNS.TL.BIFAST.UPLOAD.TMP, Y.ID.UPLOAD)
+		
+		Y.FT.ID		= FIELD(Y.OFS.RESPONSE, '/', -1)
+		
+	END ELSE
+		Y.BTPNS.TL.BIFAST.UPLOAD.NAU	= Y.ID.UPLOAD : "." : FIELD(Y.OFS.RESPONSE, '/', 1)
+		R.BTPNS.TL.BIFAST.UPLOAD.NAU = ""
+		
+		CALL F.WRITE(FN.BTPNS.TL.BIFAST.UPLOAD.NAU,Y.BTPNS.TL.BIFAST.UPLOAD.NAU,R.BTPNS.TL.BIFAST.UPLOAD.NAU)
+		
+		CALL F.READ(FN.EB.FILE.UPLOAD, Y.ID.UPLOAD, R.EB.FILE.UPLOAD, F.EB.FILE.UPLOAD, EB.FILE.UPLOAD.ERR)
+		IF Y.BIFAST.STATUS NE 'ERROR' THEN
+			Y.BIFAST.STATUS		= 'UPLOADED'
+			R.EB.FILE.UPLOAD<EbFileUpload_LocalRef, Y.B.BIFAST.STATUS.POS> = Y.BIFAST.STATUS
+		END
+	
+	    CALL ID.LIVE.WRITE(FN.EB.FILE.UPLOAD,Y.ID.UPLOAD,R.EB.FILE.UPLOAD)
+		
+		CALL F.DELETE(FN.BTPNS.TL.BIFAST.UPLOAD.TMP, Y.ID.UPLOAD)
+		
+		Y.FT.ID		= FIELD(Y.OFS.RESPONSE, '/', 1)
+	END
+	
+	Y.WRITE.TXT	:= "data = " : Y.REQ.FT
+
+	Y.ID.LOG	= Y.BIFAST.STATUS : "." : AGENT.NUMBER : "-" : Y.ID.UPLOAD : "." : Y.FT.ID : ".txt"
+	WRITE Y.WRITE.TXT TO F.FOLDER.LOG, Y.ID.LOG
+	
+	CALL OCOMO("Ofs from : " : Y.REQ.FT) 
+	CALL OCOMO("Status : " : Y.BIFAST.STATUS)
+	CALL OCOMO("Message : " : Y.OFS.MESSAGE)
+	CALL OCOMO("Response: " : Y.OFS.RESPONSE)
+
+    RETURN
+
+*-----------------------------------------------------------------------------
+READU.ERROR:
+*-----------------------------------------------------------------------------
+
+    LOOP
+        ITEMLOCKED = 0
+        READU R.EB.FILE.UPLOAD FROM F.EB.FILE.UPLOAD, Y.ID.UPLOAD LOCKED
+            ITEMLOCKED = 1
+            MSLEEP 200
+        END THEN
+			Y.BIFAST.STATUS	= 'ERROR'
+			R.EB.FILE.UPLOAD<EbFileUpload_LocalRef, Y.B.BIFAST.STATUS.POS> = Y.BIFAST.STATUS
+*			R.EB.FILE.UPLOAD<EbFileUpload_LocalRef, Y.B.ERROR.MSG.POS, -1> = FIELD(Y.OFS.RESPONSE, '/', 4)[4,9999] : "*" : Y.LINE.TEXTFILE
+			R.EB.FILE.UPLOAD<EbFileUpload_LocalRef, Y.B.ERROR.MSG.POS, -1> = FIELD(Y.OFS.RESPONSE, 'NO,', 2) : "*" : Y.LINE.TEXTFILE
+			WRITE R.EB.FILE.UPLOAD TO F.EB.FILE.UPLOAD, Y.ID.UPLOAD
+		END ELSE
+			RELEASE F.EB.FILE.UPLOAD, Y.ID.UPLOAD
+		END
+	WHILE ITEMLOCKED DO
+    REPEAT
+	
+
+	RETURN
+*-----------------------------------------------------------------------------
+END

@@ -1,0 +1,254 @@
+    SUBROUTINE BTPNS.VVR.PROXY.ACCT.CHECK
+*-----------------------------------------------------------------------------
+* Developer Name     : Budi Saptono
+* Development Date   : 20220729
+* Description        : Routine to Validate Account For Proxy Alias BIFAST
+*-----------------------------------------------------------------------------
+* Modification History:-
+*-----------------------------------------------------------------------------
+* Date            Modified by                Description
+*-----------------------------------------------------------------------------
+* Date           :
+* Modified by    :
+* Description    :
+* No Log         :
+*-----------------------------------------------------------------------------
+
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    $INSERT I_F.ACCOUNT
+    $INSERT I_F.CUSTOMER
+    $INSERT I_F.BTPNS.TH.BIFAST.PROXY.MGMT
+    $INSERT I_F.BTPNS.TL.BFAST.INTERFACE.PARAM
+    $INSERT I_F.AA.ACCOUNT.DETAILS
+    $INSERT I_F.POSTING.RESTRICT
+    $INSERT I_F.SECTOR
+    $INSERT I_F.CATEGORY
+    $INSERT I_F.EB.ERROR
+    
+*-----------------------------------------------------------------------------
+MAIN:
+*-----------------------------------------------------------------------------
+
+    GOSUB INIT
+    GOSUB PROCESS
+
+    RETURN
+
+*-----------------------------------------------------------------------------
+INIT:
+*-----------------------------------------------------------------------------
+
+    FN.ACC = 'F.ACCOUNT'
+    F.ACC = ''
+    CALL OPF(FN.ACC,F.ACC)
+    
+    FN.CU = 'F.CUSTOMER'
+    F.CU = ''
+    CALL OPF(FN.CU,F.CU)
+    
+    FN.PROXY.MGMT = 'F.BTPNS.TH.BIFAST.PROXY.MGMT'
+    F.PROXY.MGMT = ''
+    CALL OPF(FN.PROXY.MGMT,F.PROXY.MGMT)
+    
+    FN.BTPNS.TL.BFAST.INTERFACE.PARAM = "F.BTPNS.TL.BFAST.INTERFACE.PARAM"
+    F.BTPNS.TL.BFAST.INTERFACE.PARAM  = ""
+    CALL OPF(FN.BTPNS.TL.BFAST.INTERFACE.PARAM, F.BTPNS.TL.BFAST.INTERFACE.PARAM)
+    
+    FN.AA.ACCOUNT.DETAILS = "F.AA.ACCOUNT.DETAILS"
+    F.AA.ACCOUNT.DETAILS  = ""
+    CALL OPF(FN.AA.ACCOUNT.DETAILS, F.AA.ACCOUNT.DETAILS)
+    
+    FN.POSTING.RESTRICT = "F.POSTING.RESTRICT"
+    F.POSTING.RESTRICT  = ""
+    CALL OPF(FN.POSTING.RESTRICT, F.POSTING.RESTRICT)
+    
+    FN.SECTOR = "F.SECTOR"
+    F.SECTOR  = ""
+    CALL OPF(FN.SECTOR, F.SECTOR)
+    
+    FN.CATEGORY = "F.CATEGORY"
+    F.CATEGORY  = ""
+    CALL OPF(FN.CATEGORY,F.CATEGORY)
+
+    FN.EB.ERROR = "F.EB.ERROR"
+    F.EB.ERROR  = ""
+    CALL OPF(FN.EB.ERROR,F.EB.ERROR)
+
+    Y.DATE = TODAY
+    
+    Y.APP  = "ACCOUNT" :FM: "CUSTOMER" :FM:"SECTOR"
+    Y.FLD.NAME  = "B.PROXY.TYPE" :VM: "B.PROXY.ID" :VM: "B.PROXY.STATUS" :VM: "ATI.JOINT.NAME" :VM: "B.PROXY.REG.ID"
+    Y.FLD.NAME := FM: "LEGAL.TYPE" :VM: "LEGAL.ID.NO" :VM: "PROVINCE" :VM: "RESIDE.Y.N"
+    Y.FLD.NAME := FM: "SECTOR.TYP"
+    
+    Y.POS       = ""
+    CALL MULTI.GET.LOC.REF(Y.APP, Y.FLD.NAME, Y.POS)
+
+    Y.PROXY.TYPE.POS    = Y.POS<1,1>
+    Y.PROXY.ID.POS      = Y.POS<1,2>
+    Y.PROXY.STATUS.POS  = Y.POS<1,3>
+    Y.ATI.JNAME.POS     = Y.POS<1,4>
+    Y.PROXY.REG.ID.POS  = Y.POS<1,5>
+    Y.LEGAL.TYPE.POS    = Y.POS<2,1>
+    Y.LEGAL.ID.NO.POS   = Y.POS<2,2>
+    Y.PROVINCE.POS      = Y.POS<2,3>
+    Y.RESIDE.Y.N.POS    = Y.POS<2,4>
+    Y.SECTOR.TYP.POS    = Y.POS<3,1>
+    
+    RETURN
+
+*-----------------------------------------------------------------------------
+PROCESS:
+*-----------------------------------------------------------------------------
+    X = OCONV(DATE(),"D-")
+    Y.TIME = OCONV(TIME(),"MTS")
+    Y.DAYS = OCONV(DATE(),"DWA")
+    Y.DAYS = Y.DAYS[1,3]
+    Y.DD.MMM.YY = OCONV(DATE(), "D2")
+    Y.YY = X[9,2]
+    Y.MM = X[1,2]
+    Y.DD = X[4,2]
+    Y.TH = Y.TIME[1,2]
+    Y.TM = Y.TIME[4,2]
+    Y.TS = Y.TIME[7,2]
+    
+    Y.CREATE.DT.TM = Y.DAYS:", ":Y.DD.MMM.YY[1,6]:" ":X[7,4]:" ":Y.TH:":":Y.TM:":":Y.TS
+    
+    DT = X[9,2]:X[1,2]:X[4,2]:Y.TIME[1,2]:Y.TIME[4,2]:Y.TIME[7,2]
+    Y.DATE.TIME = X[9,2]:X[1,2]:X[4,2]:Y.TIME[1,2]:Y.TIME[4,2]
+
+   Y.AC.PROXY.ID = ''
+   Y.AC.PROXY.STATUS = ''
+   Y.ID         = ID.NEW
+   Y.ONBOARD.PARTNER = R.NEW(BF.PM.ONBOARD.PARTNER)
+   Y.ACC.ID   = COMI
+*   YYYYMMDDBBBBBBBBTTTSSSSSSSS
+*    20221231 00091009 710 12345678
+   Y.REFF.NO =  Y.DATE:'000':Y.ONBOARD.PARTNER:'710':Y.ID
+   R.NEW(BF.PM.REFF.NO) = Y.REFF.NO
+   
+   CALL F.READ(FN.ACC, Y.ACC.ID, R.ACC, F.ACC, ACC.ERR)
+   Y.COMPANY.CODE = R.ACC<AC.CO.CODE>
+   IF Y.COMPANY.CODE NE ID.COMPANY THEN
+        ETEXT = "EB-DIFF.CO.CODE"
+        CALL STORE.END.ERROR
+   END
+
+   IF Y.ACC.ID[1,2] EQ 'PL' THEN
+        ETEXT = "AC-INPUT.NOT.ALLOWED.FOR.PL"
+        CALL STORE.END.ERROR
+   END
+    
+   IF NOT(R.ACC) THEN
+      ETEXT = "AC-ACCOUNT.NOT.FOUND"
+      CALL STORE.END.ERROR
+   END
+
+   Y.CATEGORY        = R.ACC<AC.CATEGORY>
+   Y.AC.PROXY.TYPE   = R.ACC<AC.LOCAL.REF><1,Y.PROXY.TYPE.POS>
+   Y.AC.PROXY.ID     = R.ACC<AC.LOCAL.REF><1,Y.PROXY.ID.POS>
+   Y.AC.PROXY.STATUS = R.ACC<AC.LOCAL.REF><1,Y.PROXY.STATUS.POS>
+   
+   IF Y.AC.PROXY.ID AND Y.AC.PROXY.STATUS = 'ACTV' THEN
+      ETEXT = "Sudah Register dengan Proxy Alias : ":Y.AC.PROXY.ID
+      CALL STORE.END.ERROR
+   END
+   
+   CALL F.READ(FN.BTPNS.TL.BFAST.INTERFACE.PARAM,"SYSTEM",R.BIFAST.PARAM,F.BTPNS.TL.BFAST.INTERFACE.PARAM,READ.PAR.ERR)
+   Y.CATEG.RESTRICT = R.BIFAST.PARAM<BF.INT.PAR.RESTRICT.CATEG.IN>
+   LOCATE Y.CATEGORY IN Y.CATEG.RESTRICT<1,1> SETTING POS THEN
+       CALL F.READ(FN.EB.ERROR,"EB-CANNOT.REG.PROXY",R.EB.ERROR,F.EB.ERROR,ERR.ERROR)
+       Y.DESC.ERROR = R.EB.ERROR<1>
+       CALL F.READ(FN.CATEGORY,Y.CATEGORY,R.CATEGORY,F.CATEGORY,ERR.CATEGORY)
+       Y.DESC.CATEGORY = R.CATEGORY<1>
+*       ETEXT = "EB-AC.CANT.DEBIT"
+       ETEXT  = Y.DESC.CATEGORY:" ":Y.DESC.ERROR
+       CALL STORE.END.ERROR
+   END
+   
+   IF NUM(Y.ACC.ID) THEN
+      Y.INACTIV.MARKER = R.ACC<AC.INACTIV.MARKER>
+      Y.AA.ID = R.ACC<AC.ARRANGEMENT.ID>
+
+      CALL F.READ(FN.AA.ACCOUNT.DETAILS, Y.AA.ID, R.AA.ACCOUNT.DETAILS, F.AA.ACCOUNT.DETAILS, ERR.AA.ACCOUNT.DETAILS)
+      Y.ARR.DORMANCY.STATUS = UPCASE(R.AA.ACCOUNT.DETAILS<AA.AD.ARR.DORMANCY.STATUS>)
+
+      IF Y.ARR.DORMANCY.STATUS EQ "DORMANT" OR Y.INACTIV.MARKER EQ "Y" THEN
+         ETEXT = "EB-DORMANT.ACCT"
+         CALL STORE.END.ERROR
+      END
+
+   END ELSE
+*<Hamka - 20220809 - add val error for  ia
+      ETEXT = "AC-INTERNAL.ACCOUNT"
+      CALL STORE.END.ERROR
+*>
+   END
+   
+    Y.RESTRICT.CODE = R.ACC<AC.POSTING.RESTRICT>
+    CALL F.READ(FN.POSTING.RESTRICT,Y.RESTRICT.CODE,R.POSTING.RESTRICT,F.POSTING.RESTRICT,POST.REST.ERR)
+    Y.RESTRICT.TYPE = R.POSTING.RESTRICT<AC.POS.RESTRICTION.TYPE>
+    IF Y.RESTRICT.TYPE EQ 'DEBIT' OR Y.RESTRICT.TYPE EQ 'ALL' THEN
+        AF    = BF.PM.ACCOUNT.NO
+        ETEXT = 'AC-POSTING.RESTRICTION.SET'
+        CALL STORE.END.ERROR
+    END
+    
+    IF Y.CATEGORY GE 6000 AND Y.CATEGORY LT 6500 THEN
+        R.NEW(BF.PM.ACCOUNT.TYPE) = "10"
+    END
+    IF Y.CATEGORY GE 1000 AND Y.CATEGORY LT 2999 THEN
+        R.NEW(BF.PM.ACCOUNT.TYPE) = "20"
+    END
+   
+   Y.CIF = R.ACC<AC.CUSTOMER>
+   Y.ACC.NAME = R.ACC<AC.LOCAL.REF, Y.ATI.JNAME.POS>
+   CALL F.READ(FN.CU, Y.CIF, R.CUS, F.CU, CU.ERR)
+   Y.LEGAL.ID       = R.CUS<EB.CUS.LOCAL.REF, Y.LEGAL.ID.NO.POS>
+   Y.LEGAL.TYPE     = R.CUS<EB.CUS.LOCAL.REF, Y.LEGAL.TYPE.POS>
+   Y.PROVINCE       = R.CUS<EB.CUS.LOCAL.REF, Y.PROVINCE.POS>
+   Y.RESIDE.Y.N     = R.CUS<EB.CUS.LOCAL.REF><1,Y.RESIDE.Y.N.POS>
+   Y.RESIDENCE      = R.CUS<EB.CUS.RESIDENCE>
+   Y.SECTOR         = R.CUS<EB.CUS.SECTOR>
+   IF Y.RESIDENCE EQ "ID" THEN
+        R.NEW(BF.PM.RESS.STATUS) = "01"
+   END ELSE
+        R.NEW(BF.PM.RESS.STATUS) = "02"
+   END
+   
+   CALL F.READ(FN.SECTOR, Y.SECTOR, R.SECTOR, F.SECTOR,READ.SEC.ERR)
+   Y.SECTOR.TYPE = R.SECTOR<EB.SEC.LOCAL.REF><1,Y.SECTOR.TYP.POS>
+    
+   BEGIN CASE 
+   CASE Y.SECTOR.TYPE EQ "STAF" OR Y.SECTOR.TYPE EQ "INDV" 
+        R.NEW(BF.PM.CUSTOMER.TYPE)  = 1
+   CASE Y.SECTOR.TYPE EQ "CORP" OR Y.SECTOR.TYPE EQ "ORGN" 
+        R.NEW(BF.PM.CUSTOMER.TYPE)  = 2
+   CASE Y.SECTOR.TYPE EQ "GOVT"
+        R.NEW(BF.PM.CUSTOMER.TYPE)  = 3
+   CASE OTHERWISE(1) 
+        R.NEW(BF.PM.CUSTOMER.TYPE)  = 0
+   END CASE
+    
+   Y.MOBILE.NO  = R.CUS<EB.CUS.SMS.1>
+   Y.EMAIL      = R.CUS<EB.CUS.EMAIL.1>
+   R.NEW(BF.PM.CUSTOMER.NO) = Y.CIF
+   
+   IF TRIM(Y.LEGAL.TYPE) = 'KTP' THEN
+      R.NEW(BF.PM.LEGAL.ID.TYPE) = '01'
+   END ELSE
+      R.NEW(BF.PM.LEGAL.ID.TYPE) = '02'
+   END
+   
+   R.NEW(BF.PM.LEGAL.ID.NO) =  Y.LEGAL.ID 
+   R.NEW(BF.PM.TOWN.ID) = Y.PROVINCE
+   R.NEW(BF.PM.ACCOUNT.NAME) = Y.ACC.NAME
+   R.NEW(BF.PM.CREATE.DT.TIME) = Y.CREATE.DT.TM
+   RETURN
+END
+
+
+    
+
+    

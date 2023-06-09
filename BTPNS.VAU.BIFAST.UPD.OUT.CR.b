@@ -1,0 +1,488 @@
+    SUBROUTINE BTPNS.VAU.BIFAST.UPD.OUT.CR
+*-----------------------------------------------------------------------------
+* Developer Name     : Ratih Purwaning Utami
+* Development Date   : 20220606
+* Description        : Auth Routine for storing data BIFAST to local template
+*-----------------------------------------------------------------------------
+* Modification History:-
+*-----------------------------------------------------------------------------
+* Date               : 20220701
+* Modified by        : BTPNS-BSA
+* Description        : Add Process Send Message to BIFAST
+* No Log             :
+*-----------------------------------------------------------------------------
+* Date               : 20221111
+* Modified by        : Saidah Manshuroh
+* Description        : Delete "IDR" in fromAccount JSON Message
+* No Log             :
+*-----------------------------------------------------------------------------
+* Date               : 20230214
+* Modified by        : Ratih Purwaning Utami
+* Description        : Remarks error when connection is timeout
+* No Log             :
+*-----------------------------------------------------------------------------
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    $INSERT I_F.FUNDS.TRANSFER
+    $INSERT I_F.BTPNS.TH.BIFAST.OUTGOING
+    $INSERT I_F.USER
+    $INSERT I_F.COMPANY
+	$INSERT I_F.IDCH.DISTRICT
+	$INSERT I_F.IDIH.IN.FT.JOURNAL.PAR
+	$INSERT I_F.IDIH.QUEUE.CHARGES
+	$INSERT I_F.IDCH.RTGS.BANK.CODE.G2
+	
+    Y.FILES   = "FUNDS.TRANSFER" :FM: "IDCH.RTGS.BANK.CODE.G2"
+    Y.FIELDS  = "B.DBTR.RESSTS"    : VM : "B.DBTR.TWNNM" : VM : "B.DBTR.TYPE" : VM : "B.DBTR.ACCTYPE": VM : "B.DBTR.ACCID"
+    Y.FIELDS := VM :"B.DBTR.AGTID" : VM : "B.DBTR.ID"    : VM : "B.DBTR.NM"   : VM : "B.AMOUNT"        : VM : "B.CDTR.PRXYID"
+    Y.FIELDS := VM :"B.CDTR.PRXYTYPE" : VM : "B.CDTR.RESSTS" : VM : "B.CDTR.TWNNM" : VM : "B.CDTR.TYPE" : VM : "B.CDTR.ACCTYPE"
+    Y.FIELDS := VM :"B.CDTR.ACCID" : VM : "B.CDTR.AGTID"  : VM : "B.CDTR.ID" : VM : "B.CDTR.NM" : VM : "B.CHRGBR"
+    Y.FIELDS := VM :"B.CREDTTM"    : VM : "B.ENDTOENDID"  : VM : "B.MSGID"   : VM : "B.NBOFTXS" : VM : "B.PRTRY"
+    Y.FIELDS := VM :"B.RES.STATUS" : VM : "B.RLTDENTOENDID" : VM : "B.STTLMTD" : VM : "B.TXNTYPE" : VM : "B.CHNTYPE"
+	Y.FIELDS := VM :"B.SEQ.NO"     : VM : "IN.UNIQUE.ID": VM :"IN.REVERSAL.ID" : VM : "TELLER.ID" : VM : "ATI.JNAME.2" 
+	Y.FIELDS := VM: "ATI.JNAME.3"  : VM : "IN.STAN"
+    Y.FIELDS := FM :"SKN.CLR.CODE":VM:"B.BANK.TYPE"
+    Y.POS        = "" 
+    CALL MULTI.GET.LOC.REF(Y.FILES, Y.FIELDS, Y.POS)
+
+    Y.B.DBTR.RESSTS.POS   = Y.POS<1,1>
+    Y.B.DBTR.TWNNM.POS    = Y.POS<1,2>
+    Y.B.DBTR.TYPE.POS	  = Y.POS<1,3>
+    Y.B.DBTR.ACCTYPE.POS  = Y.POS<1,4>
+    Y.B.DBTR.ACCID.POS    = Y.POS<1,5>
+    Y.B.DBTR.AGTID.POS    = Y.POS<1,6>
+    Y.B.DBTR.ID.POS	      = Y.POS<1,7>
+    Y.B.DBTR.NM.POS       = Y.POS<1,8>
+    Y.B.AMOUNT.POS	      = Y.POS<1,9>
+    Y.B.CDTR.PRXYID.POS   = Y.POS<1,10>
+    Y.B.CDTR.PRXYTYPE.POS = Y.POS<1,11>
+    Y.B.CDTR.RESSTS.POS   = Y.POS<1,12>
+    Y.B.CDTR.TWNNM.POS    = Y.POS<1,13>
+    Y.B.CDTR.TYPE.POS	  = Y.POS<1,14>
+    Y.B.CDTR.ACCTYPE.POS  = Y.POS<1,15>
+    Y.B.CDTR.ACCID.POS    = Y.POS<1,16>
+    Y.B.CDTR.AGTID.POS    = Y.POS<1,17>
+    Y.B.CDTR.ID.POS	      = Y.POS<1,18>
+    Y.B.CDTR.NM.POS       = Y.POS<1,19>
+    Y.B.CHRGBR.POS	      = Y.POS<1,20>
+    Y.B.CREDTTM.POS	      = Y.POS<1,21>
+    Y.B.ENDTOENDID.POS    = Y.POS<1,22>
+    Y.B.MSGID.POS	      = Y.POS<1,23>
+    Y.B.NBOFTXS.POS       = Y.POS<1,24>
+    Y.B.PRTRY.POS	      = Y.POS<1,25>
+    Y.B.RES.STATUS.POS    = Y.POS<1,26>
+    Y.B.RLTDENTOEND.POS   = Y.POS<1,27>
+    Y.B.STTLMTD.POS	      = Y.POS<1,28>
+    Y.B.TXNTYPE.POS	      = Y.POS<1,29>
+    Y.B.CHNTYPE.POS	      = Y.POS<1,30>
+	Y.B.SEQ.NO.POS	      = Y.POS<1,31>
+	Y.IN.UNIQUE.ID.POS    = Y.POS<1,32>
+    Y.IN.REVERSAL.ID.POS  = Y.POS<1,33>
+	Y.TELLER.ID.POS       = Y.POS<1,34>
+	Y.ATI.JNAME.2.POS     = Y.POS<1,35>
+	Y.ATI.JNAME.3.POS     = Y.POS<1,36>
+	Y.IN.STAN.POS         = Y.POS<1,37>
+	Y.SKN.CLR.CODE.POS    = Y.POS<2,1>
+	Y.SKN.BNK.TYPE.POS    = Y.POS<2,2>
+	
+    FN.BTPNS.TH.BIFAST.OUTGOING = "F.BTPNS.TH.BIFAST.OUTGOING"
+    F.BTPNS.TH.BIFAST.OUTGOING  = ""
+    CALL OPF(FN.BTPNS.TH.BIFAST.OUTGOING, F.BTPNS.TH.BIFAST.OUTGOING)
+	
+	FN.IDIH.IN.FT.JOURNAL.PAR  = "F.IDIH.IN.FT.JOURNAL.PAR"
+    F.IDIH.IN.FT.JOURNAL.PAR   = ""
+    CALL OPF(FN.IDIH.IN.FT.JOURNAL.PAR,F.IDIH.IN.FT.JOURNAL.PAR)
+
+    FN.IDIH.QUEUE.CHARGES = "F.IDIH.QUEUE.CHARGES"
+    F.IDIH.QUEUE.CHARGES  =""
+    CALL OPF(FN.IDIH.QUEUE.CHARGES,F.IDIH.QUEUE.CHARGES)
+	
+	FN.COMPANY = 'F.COMPANY'
+    F.COMPANY = ''
+    CALL OPF(FN.COMPANY,F.COMPANY)
+
+    FN.DIS = "F.IDCH.DISTRICT"
+    F.DIS = ""
+    CALL OPF(FN.DIS,F.DIS)
+	
+	FN.BANK = 'F.IDCH.RTGS.BANK.CODE.G2'
+    F.BANK = ''
+    CALL OPF(FN.BANK,F.BANK)
+	
+	FN.BTPNS.TL.BIFAST.OUTGOING.TMP = "F.BTPNS.TL.BIFAST.OUTGOING.TMP"
+	F.BTPNS.TL.BIFAST.OUTGOING.TMP  = ""
+	CALL OPF(FN.BTPNS.TL.BIFAST.OUTGOING.TMP, F.BTPNS.TL.BIFAST.OUTGOING.TMP)
+	
+    Y.IN.REVERSAL.ID  = R.NEW(FT.LOCAL.REF)<1,Y.IN.REVERSAL.ID.POS>
+
+    FT.ID = ID.NEW
+
+    GOSUB UPDATE.FILE
+	GOSUB CONSTRUCT.REQUEST
+		
+    RETURN
+
+*-----------------------------------------------------------------------------------------------------------------------------------------------------
+UPDATE.FILE:
+*===========
+    CALL F.READ(FN.BTPNS.TH.BIFAST.OUTGOING,FT.ID,R.BIFAST.OTCR,F.BTPNS.TH.BIFAST.OUTGOING,ERR1)
+
+    R.BIFAST.OTCR<BF.TOC.DBTR.RESSTS>   = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.RESSTS.POS>
+    R.BIFAST.OTCR<BF.TOC.DBTR.TWNNM>    = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.TWNNM.POS>
+    R.BIFAST.OTCR<BF.TOC.DBTR.TYPE>     = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.TYPE.POS>
+    R.BIFAST.OTCR<BF.TOC.DBTR.ACCTYPE>  = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.ACCTYPE.POS>
+    R.BIFAST.OTCR<BF.TOC.DBTR.AGTID>    = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.AGTID.POS>
+    R.BIFAST.OTCR<BF.TOC.DBTR.ID>       = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.ID.POS>
+    R.BIFAST.OTCR<BF.TOC.DBTR.NM>       = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.NM.POS>
+    R.BIFAST.OTCR<BF.TOC.AMOUNT>        = R.NEW(FT.DEBIT.AMOUNT)
+    R.BIFAST.OTCR<BF.TOC.TXN.DATE>      = R.NEW(FT.DEBIT.VALUE.DATE)
+    R.BIFAST.OTCR<BF.TOC.PROCESS.DATE>  = R.NEW(FT.PROCESSING.DATE)
+    R.BIFAST.OTCR<BF.TOC.CDTR.PRXYID>   = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.PRXYID.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.PRXYTYPE> = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.PRXYTYPE.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.RESSTS>   = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.RESSTS.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.TWNNM>    = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.TWNNM.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.TYPE>     = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.TYPE.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.ACCTYPE>  = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.ACCTYPE.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.ACCID>    = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.ACCID.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.AGTID>    = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.AGTID.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.ID>       = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.ID.POS>
+    R.BIFAST.OTCR<BF.TOC.CDTR.NM>       = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.NM.POS>
+    R.BIFAST.OTCR<BF.TOC.CHRGBR>        = R.NEW(FT.LOCAL.REF)<1,Y.B.CHRGBR.POS>
+    R.BIFAST.OTCR<BF.TOC.PRTRY>         = R.NEW(FT.LOCAL.REF)<1,Y.B.PRTRY.POS>
+    R.BIFAST.OTCR<BF.TOC.RLTDENTOENDID> = R.NEW(FT.LOCAL.REF)<1,Y.B.RLTDENTOEND.POS>
+    R.BIFAST.OTCR<BF.TOC.TXNID>         = R.NEW(FT.LOCAL.REF)<1,Y.B.TXNTYPE.POS>
+    R.BIFAST.OTCR<BF.TOC.CHNTYPE>       = R.NEW(FT.LOCAL.REF)<1,Y.B.CHNTYPE.POS> 
+    R.BIFAST.OTCR<BF.TOC.COMPANY.BOOK>  = ID.COMPANY
+    
+    Y.DATE    = TODAY[7,2]:TODAY[5,2]:TODAY[1,4]
+    Y.DATE.G2 = TODAY[1,4]:"-":TODAY[5,2]:"-":TODAY[7,2]
+    HHMM = TIMEDATE();HHMM = HHMM[1,2]:HHMM[4,2]
+    Y.CURRENT.TIME = TIMESTAMP()
+    Y.HHMMSS       = TIMEDATE()
+    Y.MILLISECONDS = FIELD(Y.CURRENT.TIME,".",2)
+    Y.HHMMSSMS     = Y.HHMMSS[1,2]: Y.HHMMSS[4,2]: Y.HHMMSS[7,2]:Y.MILLISECONDS[1,2]
+
+    TIME.STAMP = TIMEDATE()
+    X = OCONV(DATE(),"D-")
+    DT = X[9,2]:X[1,2]:X[4,2]:TIME.STAMP[1,2]:TIME.STAMP[4,2]:TIME.STAMP[7,2]
+    Y.DT = X[9,2]:X[1,2]:X[4,2]:TIME.STAMP[1,2]:TIME.STAMP[4,2]
+
+    Y.B.SEQNO       = Y.HHMMSSMS[1,8]
+    R.NEW(FT.LOCAL.REF)<1,Y.B.SEQ.NO.POS> = Y.B.SEQNO
+	Y.RETRIEVE.REF  = '0000':Y.B.SEQNO
+    Y.IN.REVERSAL.ID = "BI.":DT[1,6]:".":"0000":Y.B.SEQNO
+    R.NEW(FT.LOCAL.REF)<1,Y.IN.REVERSAL.ID.POS> = "BI.":DT[1,6]:".":"0000":Y.B.SEQNO
+	R.BIFAST.OTCR<BF.TOC.RETRIEVAL.REF.NO> = Y.RETRIEVE.REF
+	
+	Y.BIC.CODE     = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.AGTID.POS>
+	Y.TXN.TYPE     = R.NEW(FT.LOCAL.REF)<1,Y.B.TXNTYPE.POS>
+    Y.MSGID        = TODAY :Y.BIC.CODE:Y.TXN.TYPE:R.NEW(FT.LOCAL.REF)<1,Y.B.SEQ.NO.POS>
+	
+    R.BIFAST.OTCR<BF.TOC.SEQUENCE>         = R.NEW(FT.LOCAL.REF)<1,Y.B.SEQ.NO.POS>
+
+	R.BIFAST.OTCR<BF.TOC.DBTR.ACCID>       = R.NEW(FT.DEBIT.ACCT.NO)
+	R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.ACCID.POS> = R.NEW(FT.DEBIT.ACCT.NO)
+	
+	R.BIFAST.OTCR<BF.TOC.MSGID>            = Y.MSGID
+	R.NEW(FT.LOCAL.REF,Y.B.MSGID.POS)      = Y.MSGID
+	R.BIFAST.OTCR<BF.TOC.ENDTOENDID>       = Y.MSGID
+	R.NEW(FT.LOCAL.REF,Y.B.ENDTOENDID.POS) = Y.MSGID
+	
+	Y.CREDTTM = Y.DATE.G2 :"T":Y.HHMMSS[1,8]:".":Y.MILLISECONDS
+	
+	R.BIFAST.OTCR<BF.TOC.CREDTTM>          = Y.CREDTTM
+	R.NEW(FT.LOCAL.REF,Y.B.CREDTTM.POS)    = Y.CREDTTM
+	
+	R.BIFAST.OTCR<BF.TOC.STTLMTD>          = "CLRG"
+	R.NEW(FT.LOCAL.REF,Y.B.STTLMTD.POS)    = "CLRG"
+	
+	R.BIFAST.OTCR<BF.TOC.NBOFTXS>          = "1"
+	R.NEW(FT.LOCAL.REF,Y.B.NBOFTXS.POS)    = "1"
+
+	R.BIFAST.OTCR<BF.TOC.RESPONSE.STATUS>     = 'PROCESSING'
+    R.BIFAST.OTCR<BF.TOC.INPUTTER>            = R.NEW(FT.INPUTTER)
+    R.BIFAST.OTCR<BF.TOC.AUTHORISER>          = TNO:"_":OPERATOR
+	
+	R.BIFAST.OTCR<BF.TOC.CURR.NO>            += 1
+    R.BIFAST.OTCR<BF.TOC.DATE.TIME>           = Y.DT
+    R.BIFAST.OTCR<BF.TOC.CO.CODE>             = ID.COMPANY
+    R.BIFAST.OTCR<BF.TOC.DEPT.CODE>           = R.USER<EB.USE.DEPARTMENT.CODE>
+	
+    RETURN
+
+*------------------	
+CONSTRUCT.REQUEST:
+*------------------
+    X = OCONV(DATE(),"D-")
+    Y.TIME = OCONV(TIME(),"MTS")
+    Y.CURRENT.TIME = TIMESTAMP()
+	Y.YY = X[9,2]
+	Y.MM = X[1,2]
+	Y.DD = X[4,2]
+	Y.TH = Y.TIME[1,2]
+	Y.TM = Y.TIME[4,2]
+	Y.TS = Y.TIME[7,2]
+    
+    DT = X[9,2]:X[1,2]:X[4,2]:Y.TIME[1,2]:Y.TIME[4,2]:Y.TIME[7,2]
+    Y.DATE.TIME = X[9,2]:X[1,2]:X[4,2]:Y.TIME[1,2]:Y.TIME[4,2]
+
+    Y.DB.ACCT      = R.NEW(FT.DEBIT.ACCT.NO)
+	Y.AMOUNT       = R.NEW(FT.DEBIT.AMOUNT)
+	Y.DATE.TIME    = R.NEW(FT.DATE.TIME)
+	Y.CO.CODE      = R.NEW(FT.CO.CODE)
+	Y.AMOUNT       = FMT(Y.AMOUNT,"R2")
+	Y.DBTR.ACCTYPE = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.ACCTYPE.POS>
+	Y.CDTR.ACCTYPE = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.ACCTYPE.POS>
+	Y.CHNTYPE      = R.NEW(FT.LOCAL.REF)<1,Y.B.CHNTYPE.POS> 
+	Y.B.SEQNO      = R.NEW(FT.LOCAL.REF)<1,Y.B.SEQ.NO.POS> 
+	Y.TELLER.ID    = R.NEW(FT.LOCAL.REF)<1,Y.TELLER.ID.POS>
+	Y.ATI.JNAME.2  = R.NEW(FT.LOCAL.REF)<1,Y.ATI.JNAME.2.POS>
+	Y.ATI.JNAME.3  = R.NEW(FT.LOCAL.REF)<1,Y.ATI.JNAME.3.POS>
+	Y.CDTR.ACCID   = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.ACCID.POS>
+	Y.CDTR.AGTID   = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.AGTID.POS>
+	Y.DBTR.RESSTS  = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.RESSTS.POS>
+	Y.CDTR.RESSTS  = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.RESSTS.POS>
+	Y.CDTR.PRXY.TYPE = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.PRXYTYPE.POS>
+	Y.CDTR.TYPE    = R.NEW(FT.LOCAL.REF)<1,Y.B.CDTR.TYPE.POS>
+	Y.DBTR.ID      = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.ID.POS>
+	Y.IN.STAN      = R.NEW(FT.LOCAL.REF)<1,Y.IN.STAN.POS>
+	Y.PRTRY        = R.NEW(FT.LOCAL.REF)<1,Y.B.PRTRY.POS>
+	Y.DBTR.NM      = R.NEW(FT.LOCAL.REF)<1,Y.B.DBTR.NM.POS>
+	
+	CALL F.READ(FN.COMPANY, Y.CO.CODE, R.COMP, F.COMPANY, COMPANY.ERR)
+	Y.NAME.CO = R.COMP<EB.COM.COMPANY.NAME>
+	CALL GET.LOC.REF('COMPANY','DISTRICT.CODE',DISTRICT.CODE.POS)
+    Y.DISTRICT.CODE = R.COMP<EB.COM.LOCAL.REF,DISTRICT.CODE.POS>
+	
+    CALL F.READ(FN.DIS, Y.DISTRICT.CODE, R.DIS, F.DIS, DIS.ERR)
+	Y.DISTRICT.NAME = R.DIS<IDCH.DISTRICT.DESCRIPTION><1,1>
+	Y.DISTRICT.NAME = EREPLACE(Y.DISTRICT.NAME,".", " ")
+	Y.DISTRICT.NAME = UPCASE(Y.DISTRICT.NAME)
+    IF LEN(Y.DISTRICT.NAME) > 32 THEN
+	   Y.DISTRICT.NAME = Y.DISTRICT.NAME[1.32]
+	END
+	
+	CALL F.READ(FN.BANK,Y.CDTR.AGTID,R.RTGS.BANK.CODE,F.BANK,RTGSBCG2.ERR)
+    Y.SKN.CLR.CODE = R.RTGS.BANK.CODE<RTGS.BANK.CODE.LOCAL.REF, Y.SKN.CLR.CODE.POS>
+	Y.ID.BNK  = Y.SKN.CLR.CODE[1,3]
+	Y.BNK.TYPE = R.RTGS.BANK.CODE<RTGS.BANK.CODE.LOCAL.REF, Y.SKN.BNK.TYPE.POS>
+	
+	Y.CCY.ID       = '360'
+	Y.MSG.TYPE     = '0200' ; * Inquiry Transfer Req msg
+	Y.TRX.ID       = '40'   ; * Transfer
+	Y.TRX.CODE     = Y.TRX.ID:Y.DBTR.ACCTYPE:Y.CDTR.ACCTYPE
+    IF Y.DB.ACCT[1,3] = 'IDR' THEN
+	   Y.TRX.PAN   = Y.CCY.ID:'92547':Y.DB.ACCT[4,11]
+	END ELSE
+	   Y.TRX.PAN   = Y.CCY.ID:'92547':'0':Y.DB.ACCT
+	END
+    Y.TRANSMIT.DT  = Y.MM:Y.DD:Y.TH:Y.TM:Y.TS
+	Y.TRX.TIME     = Y.TH:Y.TM:Y.TS
+	Y.TRX.DATE     = Y.MM:Y.DD
+	Y.SETTLE.DATE  = Y.MM:Y.DD
+	Y.MERCHANT.TYPE = Y.CHNTYPE
+	Y.POS.ENTRY    = '011'
+*	Y.POS.COND     = '55'
+    Y.POS.COND     = '51'
+	Y.ACQUIRER.ID  = '92547'
+	Y.FORWARD.ID   = '360000'
+*	Y.RETRIEVE.REF =  Y.IN.REVERSAL.ID[12]
+    
+	Y.TERMINAL.ID  = '00006010'
+	Y.MERCHANT.ID  = FMT(Y.CO.CODE,"L#15")
+*	Y.MERCHANT.LOC = FMT(Y.NAME.CO,"L#40")
+    Y.MERCHANT.LOC = FMT(Y.DISTRICT.NAME,"L#33"):Y.DISTRICT.CODE:"IDN"
+	
+*	Y.ADD.DATA.PRIVATE = FMT(Y.CDTR.NM,L#30):FMT(Y.IN.REVERSAL.ID,L#16):FMT(Y.ATI.JNAME.1,L#30)
+    Y.ADD.DATA.PRIVATE = FMT(Y.ATI.JNAME.2,"L#30"):FMT(Y.RETRIEVE.REF,"L#16"):FMT(Y.DBTR.NM,"L#30")
+*	Y.ADD.DATA.PRIVATE = Y.ATI.JNAME.3
+	
+	Y.ISSUER.ID		= Y.ACQUIRER.ID
+	Y.FROM.ACC		= Y.DB.ACCT
+	Y.FROM.ACC.IA	= Y.FROM.ACC
+	CHANGE "IDR" TO "" IN Y.FROM.ACC.IA
+	Y.TO.ACC		= Y.CDTR.ACCID
+	Y.TXN.INDICATOR	= '2'
+	Y.BENEF.ID		= '9':Y.BNK.TYPE:Y.ID.BNK
+	Y.RESP.MSG		= ''
+    * -- Field additionalDataNational	
+	Y.DBTR.RESSTS    = NUM(Y.DBTR.RESSTS)
+	Y.CDTR.RESSTS    = NUM(Y.CDTR.RESSTS)
+	Y.TM             = 'TM10':Y.CDTR.PRXY.TYPE:Y.CDTR.TYPE:Y.PRTRY:Y.DBTR.RESSTS:Y.CDTR.RESSTS
+	Y.TM             = FMT(Y.TM,"L#14")
+	Y.TC             = FMT('TC0400',"L#8")
+	Y.PI             = 'PI05B0010'
+	* Jika pakai KTP digit nya 16
+	Y.DI             = "DI16":FMT(Y.DBTR.ID,"L#16")
+	Y.CI             = FMT("CI16","L#20")
+	Y.RN             = 'RN12':FMT(Y.IN.REVERSAL.ID[12],"L#12")
+	Y.ADD.DATA.NAS = Y.TM:Y.TC:Y.PI:Y.DI:Y.CI:Y.RN
+	
+    XX = ':'
+    ZZ = ','
+    Y.TYPE = 'BTrfRQ'
+	Y.OPEN   = '{'
+    Y.CLOSE = '}'
+*    Y.PARAM = Y.HEADER
+	Y.PARAM = Y.OPEN
+	Y.PARAM :='"msgType"':XX:DQUOTE(Y.MSG.TYPE)
+    Y.PARAM :=',"trxPAN"':XX:DQUOTE(Y.TRX.PAN)
+    Y.PARAM :=',"trxCode"':XX:DQUOTE(Y.TRX.CODE)         
+    Y.PARAM :=',"trxAmount"':XX:DQUOTE(Y.AMOUNT)
+    Y.PARAM :=',"transmissionDateTime"':XX:DQUOTE(Y.TRANSMIT.DT)
+    Y.PARAM :=',"msgSTAN"':XX:DQUOTE(Y.IN.STAN)
+	Y.PARAM :=',"trxTime"':XX:DQUOTE(Y.TRX.TIME)
+	Y.PARAM :=',"trxDate"':XX:DQUOTE(Y.TRX.DATE)
+	Y.PARAM :=',"settlementDate"':XX:DQUOTE(Y.SETTLE.DATE)
+	Y.PARAM :=',"merchantType"':XX:DQUOTE(Y.MERCHANT.TYPE)
+	Y.PARAM :=',"posEntryMode"':XX:DQUOTE(Y.POS.ENTRY)
+	Y.PARAM :=',"posConditionMode"':XX:DQUOTE(Y.POS.COND)
+	Y.PARAM :=',"acquirerID"':XX:DQUOTE(Y.ACQUIRER.ID)
+	Y.PARAM :=',"forwardingID"':XX:DQUOTE(Y.FORWARD.ID)
+	Y.PARAM :=',"retrievalReferenceNumber"':XX:DQUOTE(Y.RETRIEVE.REF)
+	Y.PARAM :=',"terminalID"':XX:DQUOTE(Y.TERMINAL.ID)
+	Y.PARAM :=',"merchantID"':XX:DQUOTE(Y.MERCHANT.ID)
+	Y.PARAM :=',"merchantNameLocation"':XX:DQUOTE(Y.MERCHANT.LOC)
+	Y.PARAM :=',"additionalDataPrivate"':XX:DQUOTE(Y.ADD.DATA.PRIVATE)
+	Y.PARAM :=',"trxCurrencyCode"':XX:DQUOTE(Y.CCY.ID)
+	Y.PARAM :=',"encryptedData"':XX:DQUOTE("")
+	Y.PARAM :=',"additionalDataNational"':XX:DQUOTE(Y.ADD.DATA.NAS)
+	Y.PARAM :=',"issuerID"':XX:DQUOTE(Y.ISSUER.ID)
+*	Y.PARAM :=',"fromAccount"':XX:DQUOTE(Y.FROM.ACC)
+	Y.PARAM :=',"fromAccount"':XX:DQUOTE(Y.FROM.ACC.IA)
+	Y.PARAM :=',"toAccount"':XX:DQUOTE(Y.TO.ACC)
+	Y.PARAM :=',"transactionIndicator"':XX:DQUOTE(Y.TXN.INDICATOR)
+	Y.PARAM :=',"beneficiaryID"':XX:DQUOTE(Y.BENEF.ID)
+	Y.PARAM := Y.CLOSE
+	
+	CRT '[BFAST-REQ] - ':Y.TRX.PAN
+    RESP.ERR = ''
+
+    Y.ID.TEMP = TODAY :".": Y.IN.REVERSAL.ID[12]
+	R.TEMP = FT.ID
+	WRITE R.TEMP TO F.BTPNS.TL.BIFAST.OUTGOING.TMP, Y.ID.TEMP
+
+	CALL BTPNSR.BIFAST.INTERFACE(Y.TYPE,Y.PARAM,RESP.POS,RESP.ERR)
+	GOSUB CHECK.RESPONSE
+	RETURN
+
+* ------------
+CHECK.RESPONSE:
+* ------------
+   FINDSTR '"responseCode"' IN RESP.POS SETTING POS THEN
+		Y.RESPONSE.TEMP = EREPLACE(EREPLACE(RESP.POS,'":"','|'),'","','|')
+		Y.RESPONSE = CHANGE(CHANGE(Y.RESPONSE.TEMP,'"',''),'}','')
+   END
+   Y.RESPONSE.CODE.RES    = FIELDS(FIELDS(Y.RESPONSE,'responseCode',2),'|',2)
+   Y.ADD.DATA.PRIVATE.RES = FIELDS(FIELDS(Y.RESPONSE,'additionalDataPrivate',2),'|',2)
+   
+   Y.SETTLEMENT.STATUS = R.BIFAST.OTCR<BF.TOC.SETTLEMENT.STATUS>
+   IF Y.RESPONSE.CODE.RES EQ '00' THEN
+      R.BIFAST.OTCR<BF.TOC.RESPONSE.STATUS>   = 'PROCESSED'
+      IF Y.SETTLEMENT.STATUS NE 'PROCESSED' THEN
+	    R.BIFAST.OTCR<BF.TOC.SETTLEMENT.STATUS> = 'PROCESSING'
+      END
+	  
+   END ELSE
+*20230214_RPU
+      IF Y.RESPONSE.CODE.RES EQ '' THEN
+        R.BIFAST.OTCR<BF.TOC.RESPONSE.STATUS>   = 'PROCESSED'
+        IF Y.SETTLEMENT.STATUS NE 'PROCESSED' THEN
+	        R.BIFAST.OTCR<BF.TOC.SETTLEMENT.STATUS> = 'PROCESSING'
+        END
+*	     IF RESP.ERR NE '' THEN
+*			E = RESP.ERR
+*		    CALL ERR
+*		 END ELSE
+*			E = "Response Code : null"
+*		    CALL ERR
+*	     END
+      END ELSE
+		 GOSUB RCCODE.FORMAT 
+         E = "Response Code : ":Y.RESPONSE.CODE.RES:" - ":Y.RESPONSE.CODE.DESC
+		 CALL ERR
+	  END
+*      RETURN
+*/20230214_RPU
+   END
+   
+   WRITE R.BIFAST.OTCR TO F.BTPNS.TH.BIFAST.OUTGOING, FT.ID
+   
+   RETURN
+   
+*-------------
+RCCODE.FORMAT:
+*--------------
+
+    ERR = Y.RESPONSE.CODE.RES
+
+    BEGIN CASE
+    CASE ERR = '01'
+        Y.RESPONSE.CODE.DESC = "Refer to Card Issuer"
+    CASE ERR = '02'
+        Y.RESPONSE.CODE.DESC = "Refer to Card Issuer"
+    CASE ERR = '03'
+        Y.RESPONSE.CODE.DESC = "Invalid Merchant"
+    CASE ERR = '04'
+        Y.RESPONSE.CODE.DESC = "Pickup / Capture Card"
+    CASE ERR = '05'
+        Y.RESPONSE.CODE.DESC = "Do not honor"	
+    CASE ERR = '12'
+        Y.RESPONSE.CODE.DESC = "Invalid Transaction"	
+    CASE ERR = '13'
+        Y.RESPONSE.CODE.DESC = "Invalid Amount"	
+    CASE ERR = '14'
+        Y.RESPONSE.CODE.DESC = "Invalid Card Number"
+    CASE ERR = '15'
+        Y.RESPONSE.CODE.DESC = "No such Issuer"	
+    CASE ERR = '20'
+        Y.RESPONSE.CODE.DESC = "Invalid Response"	
+    CASE ERR = '30'
+        Y.RESPONSE.CODE.DESC = "Format Error"	
+    CASE ERR = '31'
+        Y.RESPONSE.CODE.DESC = "Bank Not Support By Switch"
+    CASE ERR = '33'
+        Y.RESPONSE.CODE.DESC = "Expired Card"
+    CASE ERR = '36'
+        Y.RESPONSE.CODE.DESC = "Restrict Card"	
+    CASE ERR = '39'
+        Y.RESPONSE.CODE.DESC = "No Credit Account"    
+	CASE ERR = '40'
+        Y.RESPONSE.CODE.DESC = "Request Function Not Supported"    
+	CASE ERR = '51'
+        Y.RESPONSE.CODE.DESC = "Insufficient Fund"	
+    CASE ERR = '52'
+        Y.RESPONSE.CODE.DESC = "No Checking Account"	
+    CASE ERR = '53'
+        Y.RESPONSE.CODE.DESC = "No Saving Account"	
+    CASE ERR = '57'
+        Y.RESPONSE.CODE.DESC = "Transaction not permitted"	
+    CASE ERR = '58'
+        Y.RESPONSE.CODE.DESC = "Transaction not permitted"	
+    CASE ERR = '61'
+        Y.RESPONSE.CODE.DESC = "Exceed Withdrawal amount limit"	
+    CASE ERR = '63'
+        Y.RESPONSE.CODE.DESC = "Security Violation"
+    CASE ERR = '68'
+        Y.RESPONSE.CODE.DESC = "Response received too late"	
+    CASE ERR = '76'
+        Y.RESPONSE.CODE.DESC = "Invalid to Account"	
+    CASE ERR = '77'
+        Y.RESPONSE.CODE.DESC = "Invalid from Account"	
+    CASE ERR = '78'
+        Y.RESPONSE.CODE.DESC = "Account is closed"	
+    CASE ERR = '89'
+        Y.RESPONSE.CODE.DESC = "Link to host down"	
+    CASE ERR = '91'
+        Y.RESPONSE.CODE.DESC = "Issuer or swith is inoperative Unable to route txn"	
+    CASE ERR = '92'
+        Y.RESPONSE.CODE.DESC = "Unable to route transaction"	
+    CASE ERR = '94'
+        Y.RESPONSE.CODE.DESC = "Duplicate transmission or request or reversal message"	
+    CASE ERR = '96'
+        Y.RESPONSE.CODE.DESC = "System malfunction or System error"   
+    END CASE
+	RETURN
+*-----------------------------------------------------------------------------------------------------------------------------------------------------
+END
+

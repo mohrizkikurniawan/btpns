@@ -1,10 +1,10 @@
 *------------------------------------------------------------------------------
-    SUBROUTINE BTPNS.MT.BIFAST.SETTLE.QUEUE.LOAD
+    SUBROUTINE BTPNS.MT.UPLOAD.BIFAST.DEL.FT.LOAD
 *------------------------------------------------------------------------------
 *-----------------------------------------------------------------------------
 * Developer Name     : Moh Rizki Kurniawan
-* Development Date   : 20220715
-* Description        : Routine to process autorize FT settle queue
+* Development Date   : 08 Agustus 2022
+* Description        : Routine to delete FT error Upload BIFAST 
 *-----------------------------------------------------------------------------
 * Modification History:-
 *-----------------------------------------------------------------------------
@@ -21,23 +21,19 @@
     $INCLUDE I_GTS.COMMON
 *-----------------------------------------------------------------------------
 	
-	COMMON/BTPNS.MT.BIFAST.SETTLE.QUEUE.COM/fnBtpnsTlBifastSettlement,fvBtpnsTlBifastSettlement,fnFundsTransfer,fvFundsTransfer,fnFundsTransferNau,fvFundsTransferNau,fnBtpnsTlSettlementDeclined,fvBtpnsTlSettlementDeclined
+	COMMON/UPLOAD.BIFAST.DEL.FT.COM/FN.EB.FILE.UPLOAD,F.EB.FILE.UPLOAD,FN.BTPNS.TL.BIFAST.UPLOAD.NAU,F.BTPNS.TL.BIFAST.UPLOAD.NAU,FN.DM.MAPPING.DEFINITION,F.DM.MAPPING.DEFINITION,Y.UPLOAD.TYPE,Y.CO.CODE
 	
-	fnBtpnsTlBifastSettlement	= "F.BTPNS.TL.BIFAST.SETTLEMENT"
-	fvBtpnsTlBifastSettlement	= ""
-	CALL OPF(fnBtpnsTlBifastSettlement, fvBtpnsTlBifastSettlement)
-
-	fnFundsTransfer				= "F.FUNDS.TRANSFER"
-	fvFundsTransfer				= ""
-	CALL OPF(fnFundsTransfer, fvFundsTransfer)
-
-	fnFundsTransferNau			= "F.FUNDS.TRANSFER$NAU"
-	fvFundsTransferNau			= ""
-	CALL OPF(fnFundsTransferNau, fvFundsTransferNau)
-
-	fnBtpnsTlSettlementDeclined = "F.BTPNS.TL.SETTLEMENT.DECLINED"
-	fvBtpnsTlSettlementDeclined = ""
-	CALL OPF(fnBtpnsTlSettlementDeclined, fvBtpnsTlSettlementDeclined)
+	FN.EB.FILE.UPLOAD	= "F.EB.FILE.UPLOAD"
+	F.EB.FILE.UPLOAD	= ""
+	CALL OPF(FN.EB.FILE.UPLOAD, F.EB.FILE.UPLOAD)
+	
+	FN.BTPNS.TL.BIFAST.UPLOAD.NAU	= 'F.BTPNS.TL.BIFAST.UPLOAD.NAU'
+	F.BTPNS.TL.BIFAST.UPLOAD.NAU	= ''
+	CALL OPF(FN.BTPNS.TL.BIFAST.UPLOAD.NAU, F.BTPNS.TL.BIFAST.UPLOAD.NAU)
+	
+	FN.DM.MAPPING.DEFINITION		= 'F.DM.MAPPING.DEFINITION'
+	F.DM.MAPPING.DEFINITION			= ''
+	CALL OPF(FN.DM.MAPPING.DEFINITION, F.DM.MAPPING.DEFINITION)
 
     RETURN
 

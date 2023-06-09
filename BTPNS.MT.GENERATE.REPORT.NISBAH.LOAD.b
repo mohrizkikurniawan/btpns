@@ -1,0 +1,70 @@
+	SUBROUTINE BTPNS.MT.GENERATE.REPORT.NISBAH.LOAD
+*-----------------------------------------------------------------------------
+* Developer Name     : Hamka Ardyansah
+* Development Date   : 13 September 2022
+* Description        : ROutine multithread for generate report changes nisbah in deposits
+*-----------------------------------------------------------------------------
+* Modification History:-
+*-----------------------------------------------------------------------------
+* Date           	: 
+* Modified by    	: 
+* Description		: 
+*-----------------------------------------------------------------------------
+
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    $INSERT I_GTS.COMMON
+	$INSERT I_TSA.COMMON
+	$INSERT I_F.AA.ACCOUNT
+    $INSERT I_F.AA.ARRANGEMENT
+    $INSERT I_F.AA.TERM.AMOUNT
+    $INSERT I_F.AA.ACCOUNT.DETAILS
+    $INSERT I_F.ACCOUNT
+    $INSERT I_F.USER
+	$INSERT	I_F.AA.ACTIVITY.HISTORY
+    $INSERT I_F.EB.CONTRACT.BALANCES
+	$INSERT I_BTPNS.MT.GENERATE.REPORT.NISBAH.COMMON
+	
+    FN.AA.ARRANGEMENT	= 'F.AA.ARRANGEMENT'
+	F.AA.ARRANGEMENT	= ''
+	CALL OPF(FN.AA.ARRANGEMENT, F.AA.ARRANGEMENT)
+		
+	FN.AA.ACTIVITY.HISTORY	= 'F.AA.ACTIVITY.HISTORY'
+	F.AA.ACTIVITY.HISTORY	= ''
+	CALL OPF(FN.AA.ACTIVITY.HISTORY, F.AA.ACTIVITY.HISTORY)
+	
+	FN.AA.ARR.ACCOUNT = 'F.AA.ARR.ACCOUNT'
+	F.AA.ARR.ACCOUNT = ''
+	CALL OPF(FN.AA.ARR.ACCOUNT, F.AA.ARR.ACCOUNT)
+	
+	FN.ACCOUNT	= 'F.ACCOUNT'
+	F.ACCOUNT	= ''
+	CALL OPF(FN.ACCOUNT, F.ACCOUNT)
+	
+	FN.AA.ACCOUNT.DETAILS	= 'F.AA.ACCOUNT.DETAILS'
+	F.AA.ACCOUNT.DETAILS	= ''
+	CALL OPF(FN.AA.ACCOUNT.DETAILS, F.AA.ACCOUNT.DETAILS)
+	
+	FN.EB.CONTRACT.BALANCES	= 'F.EB.CONTRACT.BALANCES'
+	F.EB.CONTRACT.BALANCES	= ''
+	CALL OPF(FN.EB.CONTRACT.BALANCES, F.EB.CONTRACT.BALANCES)
+	
+	FN.BTPNS.TH.POOL.NISBAH.DEP = "F.BTPNS.TH.POOL.NISBAH.DEP"
+	F.BTPNS.TH.POOL.NISBAH.DEP  = ""
+	CALL OPF(FN.BTPNS.TH.POOL.NISBAH.DEP,F.BTPNS.TH.POOL.NISBAH.DEP)
+
+	Y.APP<1>		= 'AA.ARR.ACCOUNT'
+	Y.APP<2>		= 'AA.ARR.TERM.AMOUNT'
+	Y.FLD.NAME<1> 	= 'L.BILYET.NUM' :VM: 'L.FINAL.NISBA' :VM: 'ATI.JOINT.NAME'
+	Y.FLD.NAME<2> 	= 'L.MAT.MODE' :VM: 'L.ORG.MAT.DATE' 
+	
+	CALL MULTI.GET.LOC.REF(Y.APP, Y.FLD.NAME, Y.POS)
+
+	Y.L.BILYET.NUM.POS		= Y.POS<1,1>
+	Y.L.FINAL.NISBA.POS		= Y.POS<1,2>
+	Y.ATI.JOINT.NAME.POS	= Y.POS<1,3>
+	Y.L.MAT.MODE.POS		= Y.POS<2,1>
+	Y.L.ORG.MAT.DATE.POS	= Y.POS<2,2>
+	
+    RETURN
+END
